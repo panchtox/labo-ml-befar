@@ -1,0 +1,241 @@
+---
+environment:
+  base_dir: "C:/00_dev/00_playground/finanzas/sec_data_tools"
+  data_dir: "./data/datasets"
+
+experiment:
+  restart: FALSE
+  type: "FinancialForecast"
+  tags: ["stocks", "financial", "price", "prediction"]
+  H1: "prediccion_precio_cierre_futuro"
+  exp_dir: "./exp"
+  experiment_label: "avtk55resync"
+  experiment_code: "202409"
+  experiment_text: "con 40 tickers con cierres resincronizados"
+  
+feature_engineering:
+  files:
+    input:
+      dentrada: ["dsavstocks_v20250912.csv.gz"]
+    output:
+      # dsalida establecido dinamicamente
+    fe_script: "01_FE_financial_asis.R"
+
+  const:
+    # Variable objetivo: precio de cierre
+    origen_clase: "Close"
+    clase: "clase"
+    orden_lead: 1  # Predecir 1 mes hacia el futuro
+    frollmean_n: 2
+    reference_months_n: 3
+    presente: 202409  # Último mes con datos completos
+    canaritos_mes_start: 200501  # Inicio período análisis
+    canaritos_mes_end:  # Calculado dinámicamente
+    canaritos_mes_valid: # Calculado dinámicamente
+    
+    # Campos clave para datos financieros
+    campos_sort: ["ticker", "foto_mes"]
+    campos_rsort: ["foto_mes", "ticker"]
+    campos_fijos: ["ticker", "foto_mes", "Close", "clase", "foto_mes_reporte", "retraso_meses", "retraso_categoria"]
+    
+    # Variables de control mínimas
+    mincontrolset: ["ticker", "foto_mes"]
+    
+    # Variables principales financieras
+    campos_core_financial: [
+      "bs_totalAssets",              # Total activos
+      "bs_totalLiabilities",         # Total pasivos  
+      "bs_totalShareholderEquity",   # Patrimonio
+      "is_totalRevenue",             # Ingresos totales
+      "is_netIncome",                # Utilidad neta
+      "cf_operatingCashflow",        # Flujo operativo
+      "bs_commonStockSharesOutstanding", # Acciones en circulación
+      "Volume"                       # Volumen
+    ]
+    
+    campos_lead: []
+    campos_descartar: []
+    
+  param:
+    dummiesNA: FALSE  # Crear dummies para valores faltantes
+    
+    corregir: "NO"
+    variablesdrift: []
+    
+    variablesmanuales: TRUE  # Agregar variables calculadas
+    
+    acumulavars: FALSE
+    
+    # Lags para datos mensuales (meses anteriores)
+    lags: 
+      correr: [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE]
+      lag: [1, 2, 3, 6, 9, 12, 15, 18, 24, 36, 48, 60]
+      delta: [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE]
+      canaritos: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    # Tendencias y estadísticas móviles (ventanas en meses)
+    tendenciaYmuchomas:
+      correr: [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE]
+      ventana: [3, 6, 9, 12, 15, 18, 24, 36, 48, 60, 72, 84, 96]
+      tendencia: [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE]
+      minimo: [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE]
+      maximo: [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE]
+      promedio: [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE]
+      ratioavg: [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE]
+      ratiomax: [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE]
+      canaritos: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      
+    leads:
+      correr: [FALSE, FALSE, FALSE, FALSE, FALSE, FALSE]
+      lead: [1, 2, 3, 4, 5, 6]
+
+    # Variables específicas para análisis financiero
+    financial_ratios: TRUE  # Crear ratios financieros
+    valuation_metrics: TRUE  # Métricas de valuación
+    profitability_ratios: TRUE  # Ratios de rentabilidad
+    
+    # Feature engineering específico
+    tony: FALSE
+    rankeador: TRUE  # Ranking por mes
+    
+    canaritos_final: 0.0  # Filtrado final por importancia
+
+training_strategy:
+  const:
+    secciones: ["present", "train", "validate", "test", "train_final"]
+    clase: "clase"
+    periodo: "foto_mes"
+    presente: [202409]
+    campos_sort: ["ticker", "foto_mes"]
+    TS_train_desde: [200501]
+    
+  param:
+    semilla: 102191
+
+    # Datos actuales sin target (para predicción)
+    present:
+      periodos: [202409]
+      rango:
+        desde:
+        hasta:
+      excluir: []
+      undersampling: []
+
+    # Entrenamiento
+    train:
+      periodos: []
+      rango:
+        desde: 200501
+        hasta: 
+      excluir: []
+      undersampling: []
+
+    # Validación
+    validate:
+      periodos: [  ]
+      rango:
+        desde: 
+        hasta: 
+      excluir: []
+      undersampling: []
+
+    # Test
+    test:
+      periodos: []
+      rango:
+        desde: 
+        hasta: 
+      excluir: []
+      undersampling: []
+
+    # Entrenamiento final (todo el período)
+    train_final:
+      periodos: []
+      rango:
+        desde: 200501
+        hasta: 
+      excluir: []
+      undersampling: []
+    
+  files:
+    input:
+      dentrada: []
+    output:
+      present_data: "TS_present_data.csv.gz"
+      train_strategy: "TS_train_strategy.csv.gz"
+      train_final: "TS_train_final.csv.gz"
+      control: "control.txt"
+    ts_script: "02_TS_financial.R"
+
+hyperparameter_tuning:
+  param:
+    algoritmo: "lightgbm"
+    semilla: 999983
+    crossvalidation: FALSE
+    crossvalidation_folds: 5
+    validate: TRUE
+
+    clase_train_POS: "clase"
+    clase_validate_POS: "clase"
+    clase_test_POS: "clase"
+
+    # Parámetros LightGBM optimizados para predicción de precios
+    lightgbm:
+      learning_rate: [0.01, 0.2]
+      feature_fraction: [0.3, 0.9]
+      num_leaves: [10, 1500, 1]
+      min_data_in_leaf: [5, 5000, 1]
+      
+      lambda_l1: [0, 5]
+      lambda_l2: [0, 10]
+      min_gain_to_split: 0
+      bagging_fraction: [0.6, 1.0]
+      
+      pos_bagging_fraction: 1.0
+      neg_bagging_fraction: 1.0
+      
+      max_depth: -1
+      max_bin: 255
+      
+      seed: 999983
+      extra_trees: FALSE
+      
+      drop_rate: 0.1
+      max_drop: 50
+      skip_drop: 0.5
+      
+      metric: "rmse"
+      first_metric_only: TRUE
+      
+      objective: "regression"
+      boost_from_average: TRUE
+      force_row_wise: TRUE
+      feature_pre_filter: FALSE
+      boosting: "gbdt"
+      num_threads: 0
+      verbosity: -100
+      verbose: -100
+
+  # Optimización Bayesiana
+    BO:
+      iterations: 100  # Más iteraciones para financial forecasting
+      
+      noisy: TRUE
+      minimize: TRUE
+      has.simple.signature: FALSE
+      save.on.disk.at.time: 600
+
+  files:
+    input:
+      dentrada: "TS_train_strategy.csv.gz"
+      dweights: ""  # Sin weights específicos inicialmente
+    output:
+      BOlog: "BO_log.txt"
+      BObin: "BO_bin.Rdata"
+      tb_importancia: "tb_importancia.txt"
+      importancia: "impo_"
+    ht_script: "03_HT_financial.R"
+
+  const:
+    campo_clase: "clase"
+    campo_periodo: "foto_mes"
