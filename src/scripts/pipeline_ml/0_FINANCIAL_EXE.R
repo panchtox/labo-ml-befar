@@ -7,19 +7,20 @@ library(lubridate)
 
 #################### Definicion Parametros ######################
 library(yaml)
-carpeta_base <- "C:/00_dev/00_playground/finanzas/sec_data_tools"
+carpeta_base <- "~/labo-ml-befar"
 setwd(carpeta_base)
 objetos_trans_script <- c("experiment_dir","experiment_lead_dir","carpeta_base","objetos_trans_script")
 
-PARAMS <- yaml.load_file("./scripts/pipeline_ml/0_FINANCIAL_YML.yml")
+PARAMS <- yaml.load_file("./src/scripts/pipeline_ml/0_FINANCIAL_YML.yml")
 
 # Carpetas de experimento
 experiment_dir <- paste(PARAMS$experiment$experiment_label,PARAMS$experiment$experiment_code,sep = "_")
 experiment_lead_dir <- paste(PARAMS$experiment$experiment_label,PARAMS$experiment$experiment_code,paste0("f",PARAMS$feature_engineering$const$orden_lead),sep = "_")
 
-setwd(carpeta_base)
-dir.create("exp", showWarnings = FALSE)
-setwd("exp")
+# Crear directorios en bucket
+bucket_exp <- "~/buckets/b1/exp"
+dir.create(bucket_exp, showWarnings = FALSE, recursive = TRUE)
+setwd(bucket_exp)
 
 dir.create(experiment_dir,showWarnings = FALSE)
 setwd(experiment_dir)
@@ -43,7 +44,7 @@ write(jsontest,paste0(experiment_lead_dir,".json"))
 
 ################### Feature Engineering ################### 
 setwd(carpeta_base)
-setwd("./scripts/pipeline_ml")
+setwd("./src/scripts/pipeline_ml")
 source(PARAMS$feature_engineering$files$fe_script)
 
 ################### Training Strategy ###################
@@ -52,8 +53,7 @@ source(PARAMS$feature_engineering$files$fe_script)
 rm( list=setdiff(ls(),objetos_trans_script) )  #remove objects
 gc()             #garbage collection
 
-setwd(carpeta_base)
-setwd("exp")
+setwd(bucket_exp)
 setwd(experiment_dir)
 setwd(experiment_lead_dir)
 
@@ -61,12 +61,11 @@ jsonfile <- list.files(pattern = ".json")
 PARAMS <- jsonlite::fromJSON(jsonfile)
 
 setwd(carpeta_base)
-setwd("./scripts/pipeline_ml")
+setwd("./src/scripts/pipeline_ml")
 source(PARAMS$training_strategy$files$ts_script)
 
 #################################################################
-setwd(carpeta_base)
-setwd("exp")
+setwd(bucket_exp)
 setwd(experiment_dir)
 setwd(experiment_lead_dir)
 # actualizo los parametros del json
@@ -78,8 +77,7 @@ write(jsontest,paste0(experiment_lead_dir,".json"))
 rm( list=setdiff(ls(),objetos_trans_script) )  #remove objects
 gc()             #garbage collection
 
-setwd(carpeta_base)
-setwd("exp")
+setwd(bucket_exp)
 setwd(experiment_dir)
 setwd(experiment_lead_dir)
 
@@ -87,7 +85,7 @@ jsonfile <- list.files(pattern = ".json")
 PARAMS <- jsonlite::fromJSON(jsonfile)
 
 setwd(carpeta_base)
-setwd("./scripts/pipeline_ml")
+setwd("./src/scripts/pipeline_ml")
 
 source(PARAMS$hyperparameter_tuning$files$ht_script)
 

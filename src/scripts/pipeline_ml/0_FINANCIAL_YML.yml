@@ -1,17 +1,17 @@
 ---
 environment:
-  base_dir: "C:/00_dev/00_playground/finanzas/sec_data_tools"
-  data_dir: "./data/datasets"
+  base_dir: "~/labo-ml-befar"
+  data_dir: "~/buckets/b1/datasets"
 
 experiment:
   restart: FALSE
   type: "FinancialForecast"
   tags: ["stocks", "financial", "price", "prediction"]
   H1: "prediccion_precio_cierre_futuro"
-  exp_dir: "./exp"
+  exp_dir: "~/buckets/b1/exp"
   experiment_label: "avtk55resync"
-  experiment_code: "202409"
-  experiment_text: "con 40 tickers con cierres resincronizados"
+  experiment_code: "202401"
+  experiment_text: "con 55 tickers con cierres resincronizados"
   
 feature_engineering:
   files:
